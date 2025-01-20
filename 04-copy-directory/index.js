@@ -13,7 +13,35 @@ async function copyDir() {
   for (const file of files) {
     const sourcePath = path.join(folderPath, file);
     const destinationPath = path.join(newFolderPath, file);
-    await fsp.copyFile(sourcePath, destinationPath);
+
+    const fileStats = await fsp.stat(sourcePath);
+
+    if (fileStats.isFile()) {
+      await fsp.copyFile(sourcePath, destinationPath);
+    }
+
+    if (fileStats.isDirectory()) {
+      await copySubDir(sourcePath, destinationPath);
+    }
+  }
+}
+
+async function copySubDir(sourceDir, destinationDir) {
+  await fsp.mkdir(destinationDir, { recursive: true });
+  const files = await fsp.readdir(sourceDir);
+
+  for (const file of files) {
+    const sourcePath = path.join(sourceDir, file);
+    const destinationPath = path.join(destinationDir, file);
+    const fileStats = await fsp.stat(sourcePath);
+
+    if (fileStats.isFile()) {
+      await fsp.copyFile(sourcePath, destinationPath);
+    }
+
+    if (fileStats.isDirectory()) {
+      await copySubDir(sourcePath, destinationPath);
+    }
   }
 }
 
